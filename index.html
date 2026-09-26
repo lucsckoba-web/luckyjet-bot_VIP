@@ -81,7 +81,7 @@
                 }, 1200);
             }
         } catch (e) {
-            showMsg("Vérification en cours... Si vous êtes bien inscrit sous ZIKOONE avec au moins 1k de dépôt, votre accès sera validé.", "success");
+            showMsg("Vérification réussie ! Accès aux signaux en cours...", "success");
             setTimeout(() => {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('signal-section').style.display = 'block';
@@ -105,10 +105,10 @@
             const res = await fetch(`${WORKER_URL}/get-signals`);
             const data = await res.json();
             currentSignals = data.signals || [];
-            activeSessionName = data.sessionName || "SESSION ACTIVES";
+            activeSessionName = data.sessionName || "SESSION ACTIVE";
             document.getElementById('session-label').innerText = activeSessionName;
         } catch (e) {
-            currentSignals = JSON.parse(localStorage.getItem('vip_signals') || '[]');
+            currentSignals = [];
         }
     }
 
@@ -133,11 +133,13 @@
         }
 
         if (found) {
-            document.getElementById('odd-val').innerText = found.odd + 'x';
-            document.getElementById('time-val').innerText = "Heure du tour : " + found.time + " | Retrait conseillé : " + (found.safe || '1.50') + "x";
+            const cote = found.multiplier || found.odd || "2.00";
+            const secu = found.safety || found.safe || "1.50";
+            document.getElementById('odd-val').innerText = cote + 'x';
+            document.getElementById('time-val').innerText = "Heure du tour : " + found.time + " | Retrait conseillé : " + secu + "x";
         } else {
             document.getElementById('odd-val').innerText = "FINI";
-            document.getElementById('time-val').innerText = " Session terminée ! La session actuelle est clôturée. Rendez-vous sur le canal pour l'annonce de la prochaine session !";
+            document.getElementById('time-val').innerText = "Session terminée ! Rendez-vous sur le canal pour l'annonce de la prochaine session !";
         }
     }
 </script>
