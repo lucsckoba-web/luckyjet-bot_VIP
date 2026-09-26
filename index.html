@@ -69,7 +69,6 @@
     let currentIndex = 0;
     let autoRefreshTimer = null;
 
-    // Connexion automatique via stockage local
     window.addEventListener('DOMContentLoaded', () => {
         const savedId = localStorage.getItem('luckyjet_vip_id');
         if (savedId) {
@@ -80,7 +79,6 @@
 
     async function verifyAccess(isAuto = false) {
         const userId = document.getElementById('user-id').value.trim();
-        const msgBox = document.getElementById('login-msg');
 
         if (!userId) {
             showMsg("Veuillez entrer votre ID 1win", "error");
@@ -101,16 +99,17 @@
                 
                 activeSignals = data.signals || [];
                 currentIndex = 0;
-                document.getElementById('session-title').innerText = data.sessionName || "SESSION ACTIVE";
+                
+                let cleanSessionName = (data.sessionName || "SESSION ACTIVE").replace(/^Ex:\s*/i, '');
+                document.getElementById('session-title').innerText = cleanSessionName;
 
                 setTimeout(() => {
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('signal-screen').classList.remove('hidden');
                     updateSignalDisplay();
                     
-                    // Vérification automatique du temps toutes les 5 secondes
                     if (!autoRefreshTimer) {
-                        autoRefreshTimer = setInterval(updateSignalDisplay, 5000);
+                        autoRefreshTimer = setInterval(updateSignalDisplay, 3000);
                     }
                 }, isAuto ? 0 : 800);
             }
@@ -119,34 +118,26 @@
         }
     }
 
-    // Convertit "14:30" ou "30" en minutes absolues
-    function getMinutesFromTime(timeStr) {
-        if (!timeStr) return 0;
-        const clean = String(timeStr).replace('h', ':').replace('H', ':');
+    // Récupère la minute exacte du signal
+    function getSignalMinute(timeStr) {
+        if (!timeStr) return -1;
+        let clean = String(timeStr).replace(/^Ex:\s*/i, '').replace('h', ':').replace('H', ':').trim();
         const parts = clean.split(':');
         if (parts.length >= 2) {
-            return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+            return parseInt(parts[1], 10);
         }
-        return parseInt(parts[0], 10) || 0;
-    }
-
-    function getCurrentMinutes() {
-        const now = new Date();
-        return (now.getHours() * 60) + now.getMinutes();
+        return parseInt(parts[0], 10);
     }
 
     function isSignalReady(sig) {
         if (!sig) return false;
-        const targetMin = getMinutesFromTime(sig.time);
-        const currentMin = getCurrentMinutes();
+        const sigMinute = getSignalMinute(sig.time);
+        if (isNaN(sigMinute) || sigMinute < 0) return true; // Débloque si pas de format valide
 
-        // Si l'admin a entré juste une minute (ex: 30), on compare les minutes courantes
-        if (String(sig.time).indexOf(':') === -1 && String(sig.time).indexOf('h') === -1) {
-            return new Date().getMinutes() >= targetMin;
-        }
-
-        // Sinon comparaison horaire globale
-        return currentMin >= targetMin;
+        const currentMinute = new Date().getMinutes();
+        
+        // Le signal est débloqué si la minute courante est supérieure ou égale à la minute du signal
+        return currentMinute >= sigMinute;
     }
 
     function updateSignalDisplay() {
@@ -171,29 +162,28 @@
         }
 
         const currentSig = activeSignals[currentIndex];
+        const displayTime = String(currentSig.time).replace(/^Ex:\s*/i, '');
         const ready = isSignalReady(currentSig);
 
         if (!ready) {
-            // Signal pas encore prêt
-            document.getElementById('signal-time').innerText = "Signal prévu à : " + currentSig.time;
+            document.getElementById('signal-time').innerText = "Signal prévu à : " + displayTime;
             document.getElementById('signal-odd').innerText = "⏳ PATIENTEZ";
             document.getElementById('signal-odd').style.color = "#f39c12";
-            document.getElementById('signal-safe').innerText = "Le signal sera débloqué à l'heure indiquée";
+            document.getElementById('signal-safe').innerText = "Le signal sera débloqué à la minute indiquée";
             nextBtn.disabled = true;
         } else {
-            // Signal prêt : affichage de la cote
-            document.getElementById('signal-time').innerText = "Heure du signal : " + currentSig.time;
+            document.getElementById('signal-time').innerText = "Heure du signal : " + displayTime;
             
-            let multiplierText = String(currentSig.multiplier);
+            let multiplierText = String(currentSig.multiplier).replace(/^Ex:\s*/i, '');
             if (!multiplierText.includes('x')) multiplierText = 'x' + multiplierText;
             document.getElementById('signal-odd').innerText = multiplierText;
             document.getElementById('signal-odd').style.color = "#2ecc71";
             
-            let safeText = String(currentSig.safety || "1.50");
+            let safeText = String(currentSig.safety || "1.50").replace(/^Ex:\s*/i, '');
             if (!safeText.includes('x')) safeText = 'x' + safeText;
             document.getElementById('signal-safe').innerText = "Auto-retrait recommandé : " + safeText;
 
-            // Gestion de l'état du bouton "PROCHAIN SIGNAL"
+            // Débloque le bouton uniquement si le signal SUIVANT est lui aussi arrivé
             if (currentIndex < activeSignals.length - 1) {
                 const nextSig = activeSignals[currentIndex + 1];
                 nextBtn.disabled = !isSignalReady(nextSig);
@@ -205,7 +195,6 @@
 
     function nextSignal() {
         if (activeSignals.length > 0 && currentIndex < activeSignals.length) {
-            // Si on est sur le dernier signal ou si le suivant est prêt, on avance
             if (currentIndex < activeSignals.length - 1) {
                 const nextSig = activeSignals[currentIndex + 1];
                 if (isSignalReady(nextSig)) {
