@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Jet VIP - Signaux</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b0e14; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 25px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        h1 { color: #f39c12; font-size: 24px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        p.subtitle { color: #8b949e; font-size: 14px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; color: #fff; font-size: 16px; text-align: center; outline: none; }
+        input[type="text"]:focus { border-color: #f39c12; }
+        .btn { width: 100%; padding: 14px; background: linear-gradient(45deg, #f39c12, #e67e22); border: none; border-radius: 8px; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px; display: none; text-align: left; line-height: 1.4; }
+        .alert-error { background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; }
+        .alert-warning { background: rgba(241, 196, 15, 0.15); border: 1px solid #f1c40f; color: #f1c40f; }
+        .alert-success { background: rgba(46, 204, 113, 0.15); border: 1px solid #2ecc71; color: #2ecc71; }
+        .affiliate-link { display: inline-block; margin-top: 10px; color: #3498db; font-weight: bold; text-decoration: underline; cursor: pointer; }
+        .signal-box { margin-top: 25px; padding: 20px; background: #0d1117; border-radius: 12px; border: 1px dashed #f39c12; display: none; }
+        .odd-display { font-size: 38px; font-weight: bold; color: #2ecc71; margin: 15px 0; }
+        .session-badge { display: inline-block; padding: 4px 12px; background: #21262d; border-radius: 20px; font-size: 12px; color: #f39c12; margin-bottom: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🚀 Lucky Jet VIP</h1>
+    <p class="subtitle">Saisissez votre ID 1win pour accéder aux signaux VIP</p>
+
+    <div id="login-section">
+        <div class="input-group">
+            <input type="text" id="user-id" placeholder="Entrez votre ID 1win">
+        </div>
+        <button class="btn" onclick="verifyAccess()">VÉRIFIER MON ACCÈS</button>
+        
+        <div id="msg-box" class="alert"></div>
+    </div>
+
+    <div id="signal-section" class="signal-box">
+        <span class="session-badge" id="session-label">SESSION EN COURS</span>
+        <div id="signal-content">
+            <p style="color: #8b949e; font-size: 14px;">Appuyez sur le bouton pour obtenir le signal courant</p>
+            <div class="odd-display" id="odd-val">--.--x</div>
+            <p id="time-val" style="font-size: 14px; color: #8b949e; margin-bottom: 15px;"></p>
+            <button class="btn" onclick="getProchainSignal()">PROCHAIN SIGNAL</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const WORKER_URL = "https://zikooneverification.lucsckoba.workers.dev";
+
+    async function verifyAccess() {
+        const userId = document.getElementById('user-id').value.trim();
+        const msgBox = document.getElementById('msg-box');
+        msgBox.style.display = 'none';
+
+        if (!userId) {
+            showMsg("Veuillez entrer un ID 1win valide.", "error");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${WORKER_URL}?id=${userId}`);
+            const data = await response.json();
+
+            if (!data.registered) {
+                showMsg(`⚠️ Votre ID n'est pas inscrit sous le code promo <b>ZIKOONE</b>.<br><a class="affiliate-link" href="https://1win.com" target="_blank">Cliquez ici pour vous inscrire avec ZIKOONE</a>`, "error");
+            } else if (data.deposit < 1000) {
+                showMsg(`⚠️ ID vérifié sous ZIKOONE, mais votre dépôt actuel est de ${data.deposit} FCFA.<br>Un dépôt minimum de <b>1 000 FCFA</b> est requis pour accéder au VIP.`, "warning");
+            } else {
+                showMsg("✅ Accès VIP validé ! Redirection vers les signaux...", "success");
+                setTimeout(() => {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('signal-section').style.display = 'block';
+                    fetchSignals();
+                }, 1200);
+            }
+        } catch (e) {
+            showMsg("Vérification en cours... Si vous êtes bien inscrit sous ZIKOONE avec au moins 1k de dépôt, votre accès sera validé.", "success");
+            setTimeout(() => {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('signal-section').style.display = 'block';
+                fetchSignals();
+            }, 1200);
+        }
+    }
+
+    function showMsg(htmlText, type) {
+        const msgBox = document.getElementById('msg-box');
+        msgBox.className = `alert alert-${type}`;
+        msgBox.innerHTML = htmlText;
+        msgBox.style.display = 'block';
+    }
+
+    let currentSignals = [];
+    let activeSessionName = "";
+
+    async function fetchSignals() {
+        try {
+            const res = await fetch(`${WORKER_URL}/get-signals`);
+            const data = await res.json();
+            currentSignals = data.signals || [];
+            activeSessionName = data.sessionName || "SESSION ACTIVES";
+            document.getElementById('session-label').innerText = activeSessionName;
+        } catch (e) {
+            currentSignals = JSON.parse(localStorage.getItem('vip_signals') || '[]');
+        }
+    }
+
+    function getProchainSignal() {
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        if (currentSignals.length === 0) {
+            document.getElementById('odd-val').innerText = "ATTENTE";
+            document.getElementById('time-val').innerText = "Aucun signal programmé. Patientez l'annonce sur le canal !";
+            return;
+        }
+
+        let found = null;
+        for (let sig of currentSignals) {
+            const [h, m] = sig.time.split(':').map(Number);
+            const sigMinutes = h * 60 + m;
+            if (sigMinutes >= currentMinutes) {
+                found = sig;
+                break;
+            }
+        }
+
+        if (found) {
+            document.getElementById('odd-val').innerText = found.odd + 'x';
+            document.getElementById('time-val').innerText = "Heure du tour : " + found.time + " | Retrait conseillé : " + (found.safe || '1.50') + "x";
+        } else {
+            document.getElementById('odd-val').innerText = "FINI";
+            document.getElementById('time-val').innerText = " Session terminée ! La session actuelle est clôturée. Rendez-vous sur le canal pour l'annonce de la prochaine session !";
+        }
+    }
+</script>
+
+</body>
+</html>
