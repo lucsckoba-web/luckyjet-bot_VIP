@@ -15,10 +15,10 @@
         input[type="text"]:focus { border-color: #f39c12; }
         .btn { width: 100%; padding: 14px; background: linear-gradient(45deg, #f39c12, #e67e22); border: none; border-radius: 8px; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px; display: none; text-align: left; line-height: 1.4; }
-        .alert-error { background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; }
-        .alert-warning { background: rgba(241, 196, 15, 0.15); border: 1px solid #f1c40f; color: #f1c40f; }
-        .alert-success { background: rgba(46, 204, 113, 0.15); border: 1px solid #2ecc71; color: #2ecc71; }
+        .alert { padding: 14px; border-radius: 8px; font-size: 14px; margin-top: 15px; display: none; text-align: left; line-height: 1.5; }
+        .alert-error { background: rgba(231, 76, 60, 0.12); border: 1px solid #e74c3c; color: #e74c3c; }
+        .alert-warning { background: rgba(241, 196, 15, 0.12); border: 1px solid #f1c40f; color: #f1c40f; }
+        .alert-success { background: rgba(46, 204, 113, 0.12); border: 1px solid #2ecc71; color: #2ecc71; }
         .affiliate-link { display: inline-block; margin-top: 10px; color: #3498db; font-weight: bold; text-decoration: underline; cursor: pointer; }
         .signal-box { margin-top: 25px; padding: 20px; background: #0d1117; border-radius: 12px; border: 1px dashed #f39c12; display: none; }
         .odd-display { font-size: 38px; font-weight: bold; color: #2ecc71; margin: 15px 0; }
@@ -60,7 +60,7 @@
         msgBox.style.display = 'none';
 
         if (!userId) {
-            showMsg("Veuillez entrer un ID 1win valide.", "error");
+            showMsg("⚠️ Veuillez saisir votre ID 1win pour continuer.", "error");
             return;
         }
 
@@ -68,12 +68,13 @@
             const response = await fetch(`${WORKER_URL}?id=${userId}`);
             const data = await response.json();
 
+            // VÉRIFICATION STRICTE
             if (!data.registered) {
-                showMsg(`⚠️ Votre ID n'est pas inscrit sous le code promo <b>ZIKOONE</b>.<br><a class="affiliate-link" href="https://1win.com" target="_blank">Cliquez ici pour vous inscrire avec ZIKOONE</a>`, "error");
+                showMsg(`❌ <b>Accès Refusé</b><br>Votre ID n'est pas inscrit sous le code promo <b>ZIKOONE</b>.<br><br>👉 Inscrivez-vous avec le code <b>ZIKOONE</b> et effectuez un dépôt d'au moins 1 000 FCFA pour débloquer l'accès VIP.<br><a class="affiliate-link" href="https://1win.com" target="_blank">Cliquez ici pour vous inscrire sur 1win</a>`, "error");
             } else if (data.deposit < 1000) {
-                showMsg(`⚠️ ID vérifié sous ZIKOONE, mais votre dépôt actuel est de ${data.deposit} FCFA.<br>Un dépôt minimum de <b>1 000 FCFA</b> est requis pour accéder au VIP.`, "warning");
+                showMsg(`⚠️ <b>Dépôt Insuffisant</b><br>ID vérifié sous le code <b>ZIKOONE</b>, mais votre solde de dépôt est de <b>${data.deposit} FCFA</b>.<br><br>Un dépôt minimum de <b>1 000 FCFA</b> est requis pour activer votre accès aux signaux.`, "warning");
             } else {
-                showMsg("✅ Accès VIP validé ! Redirection vers les signaux...", "success");
+                showMsg("✅ <b>Compte VIP Vérifié !</b><br>Redirection vers l'espace des signaux...", "success");
                 setTimeout(() => {
                     document.getElementById('login-section').style.display = 'none';
                     document.getElementById('signal-section').style.display = 'block';
@@ -81,12 +82,8 @@
                 }, 1200);
             }
         } catch (e) {
-            showMsg("Vérification réussie ! Accès aux signaux en cours...", "success");
-            setTimeout(() => {
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('signal-section').style.display = 'block';
-                fetchSignals();
-            }, 1200);
+            // BLOQUÉ EN CAS D'ERREUR DE CONNEXION
+            showMsg("❌ <b>Erreur de Vérification</b><br>Impossible de vérifier cet ID pour le moment. Veuillez réessayer plus tard ou contacter le support.", "error");
         }
     }
 
