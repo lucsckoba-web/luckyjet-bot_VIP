@@ -19,7 +19,7 @@
 
         .btn { width: 100%; padding: 14px; background: linear-gradient(45deg, #f39c12, #e67e22); border: none; border-radius: 8px; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
         .btn:hover { opacity: 0.9; }
-        .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
+        .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; opacity: 0.6; }
 
         .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px; text-align: center; }
         .alert-error { background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; }
@@ -67,6 +67,7 @@
     const WORKER_URL = "https://zikooneverification.lucsckoba.workers.dev";
     let activeSignals = [];
     let currentIndex = 0;
+    let autoRefreshTimer = null;
 
     // Connexion automatique via stockage local
     window.addEventListener('DOMContentLoaded', () => {
@@ -106,6 +107,11 @@
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('signal-screen').classList.remove('hidden');
                     updateSignalDisplay();
+                    
+                    // Vérification automatique du temps toutes les 5 secondes
+                    if (!autoRefreshTimer) {
+                        autoRefreshTimer = setInterval(updateSignalDisplay, 5000);
+                    }
                 }, isAuto ? 0 : 800);
             }
         } catch (e) {
@@ -113,13 +119,34 @@
         }
     }
 
-    // Extraction des minutes indépendamment du fuseau horaire
+    // Convertit "14:30" ou "30" en minutes absolues
     function getMinutesFromTime(timeStr) {
         if (!timeStr) return 0;
-        const clean = timeStr.replace('h', ':').replace('H', ':');
+        const clean = String(timeStr).replace('h', ':').replace('H', ':');
         const parts = clean.split(':');
-        if (parts.length === 1) return parseInt(parts[0], 10) || 0;
-        return parseInt(parts[1], 10) || 0;
+        if (parts.length >= 2) {
+            return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+        }
+        return parseInt(parts[0], 10) || 0;
+    }
+
+    function getCurrentMinutes() {
+        const now = new Date();
+        return (now.getHours() * 60) + now.getMinutes();
+    }
+
+    function isSignalReady(sig) {
+        if (!sig) return false;
+        const targetMin = getMinutesFromTime(sig.time);
+        const currentMin = getCurrentMinutes();
+
+        // Si l'admin a entré juste une minute (ex: 30), on compare les minutes courantes
+        if (String(sig.time).indexOf(':') === -1 && String(sig.time).indexOf('h') === -1) {
+            return new Date().getMinutes() >= targetMin;
+        }
+
+        // Sinon comparaison horaire globale
+        return currentMin >= targetMin;
     }
 
     function updateSignalDisplay() {
@@ -143,43 +170,57 @@
             return;
         }
 
-        const sig = activeSignals[currentIndex];
-        const targetMinute = getMinutesFromTime(sig.time);
-        const currentMinute = new Date().getMinutes();
+        const currentSig = activeSignals[currentIndex];
+        const ready = isSignalReady(currentSig);
 
-        // Comparaison basée uniquement sur les minutes de l'heure courante
-        if (targetMinute > currentMinute && (targetMinute - currentMinute) <= 30) {
-            document.getElementById('signal-time').innerText = "Signal prévu minute : " + targetMinute;
+        if (!ready) {
+            // Signal pas encore prêt
+            document.getElementById('signal-time').innerText = "Signal prévu à : " + currentSig.time;
             document.getElementById('signal-odd').innerText = "⏳ PATIENTEZ";
             document.getElementById('signal-odd').style.color = "#f39c12";
-            document.getElementById('signal-safe').innerText = "Déblocage dans quelques minutes...";
+            document.getElementById('signal-safe').innerText = "Le signal sera débloqué à l'heure indiquée";
             nextBtn.disabled = true;
-            return;
+        } else {
+            // Signal prêt : affichage de la cote
+            document.getElementById('signal-time').innerText = "Heure du signal : " + currentSig.time;
+            
+            let multiplierText = String(currentSig.multiplier);
+            if (!multiplierText.includes('x')) multiplierText = 'x' + multiplierText;
+            document.getElementById('signal-odd').innerText = multiplierText;
+            document.getElementById('signal-odd').style.color = "#2ecc71";
+            
+            let safeText = String(currentSig.safety || "1.50");
+            if (!safeText.includes('x')) safeText = 'x' + safeText;
+            document.getElementById('signal-safe').innerText = "Auto-retrait recommandé : " + safeText;
+
+            // Gestion de l'état du bouton "PROCHAIN SIGNAL"
+            if (currentIndex < activeSignals.length - 1) {
+                const nextSig = activeSignals[currentIndex + 1];
+                nextBtn.disabled = !isSignalReady(nextSig);
+            } else {
+                nextBtn.disabled = false;
+            }
         }
-
-        // Affichage du signal validé
-        document.getElementById('signal-time').innerText = "Heure du signal : " + sig.time;
-        
-        let multiplierText = String(sig.multiplier);
-        if (!multiplierText.includes('x')) multiplierText = 'x' + multiplierText;
-        document.getElementById('signal-odd').innerText = multiplierText;
-        document.getElementById('signal-odd').style.color = "#2ecc71";
-        
-        let safeText = String(sig.safety || "1.50");
-        if (!safeText.includes('x')) safeText = 'x' + safeText;
-        document.getElementById('signal-safe').innerText = "Auto-retrait recommandé : " + safeText;
-
-        nextBtn.disabled = false;
     }
 
     function nextSignal() {
         if (activeSignals.length > 0 && currentIndex < activeSignals.length) {
-            currentIndex++;
-            updateSignalDisplay();
+            // Si on est sur le dernier signal ou si le suivant est prêt, on avance
+            if (currentIndex < activeSignals.length - 1) {
+                const nextSig = activeSignals[currentIndex + 1];
+                if (isSignalReady(nextSig)) {
+                    currentIndex++;
+                    updateSignalDisplay();
+                }
+            } else {
+                currentIndex++;
+                updateSignalDisplay();
+            }
         }
     }
 
     function logout() {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
         localStorage.removeItem('luckyjet_vip_id');
         document.getElementById('signal-screen').classList.add('hidden');
         document.getElementById('login-screen').classList.remove('hidden');
