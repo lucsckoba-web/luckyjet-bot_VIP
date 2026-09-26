@@ -3,141 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Jet VIP - Signaux</title>
+    <title>Lucky Jet VIP - Signaux Global</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0e14; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 25px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-        h1 { color: #f39c12; font-size: 24px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        p.subtitle { color: #8b949e; font-size: 14px; margin-bottom: 20px; }
-        .input-group { margin-bottom: 20px; }
-        input[type="text"] { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; color: #fff; font-size: 16px; text-align: center; outline: none; }
+        h1 { color: #f39c12; font-size: 22px; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        p.subtitle { color: #8b949e; font-size: 13px; margin-bottom: 20px; }
+        
+        .login-box, .signals-box { display: block; }
+        .hidden { display: none !important; }
+
+        input[type="text"] { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; color: #fff; font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; }
         input[type="text"]:focus { border-color: #f39c12; }
-        .btn { width: 100%; padding: 14px; background: linear-gradient(45deg, #f39c12, #e67e22); border: none; border-radius: 8px; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .alert { padding: 14px; border-radius: 8px; font-size: 14px; margin-top: 15px; display: none; text-align: left; line-height: 1.5; }
-        .alert-error { background: rgba(231, 76, 60, 0.12); border: 1px solid #e74c3c; color: #e74c3c; }
-        .alert-warning { background: rgba(241, 196, 15, 0.12); border: 1px solid #f1c40f; color: #f1c40f; }
-        .alert-success { background: rgba(46, 204, 113, 0.12); border: 1px solid #2ecc71; color: #2ecc71; }
-        .affiliate-link { display: inline-block; margin-top: 10px; color: #3498db; font-weight: bold; text-decoration: underline; cursor: pointer; }
-        .signal-box { margin-top: 25px; padding: 20px; background: #0d1117; border-radius: 12px; border: 1px dashed #f39c12; display: none; }
-        .odd-display { font-size: 38px; font-weight: bold; color: #2ecc71; margin: 15px 0; }
-        .session-badge { display: inline-block; padding: 4px 12px; background: #21262d; border-radius: 20px; font-size: 12px; color: #f39c12; margin-bottom: 10px; font-weight: bold; }
+
+        .btn { width: 100%; padding: 14px; background: linear-gradient(45deg, #f39c12, #e67e22); border: none; border-radius: 8px; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
+
+        .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px; text-align: center; }
+        .alert-error { background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; }
+        .alert-success { background: rgba(46, 204, 113, 0.15); border: 1px solid #2ecc71; color: #2ecc71; }
+
+        .session-badge { background: #21262d; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; display: inline-block; color: #f39c12; font-size: 14px; font-weight: bold; margin-bottom: 15px; }
+        .signal-display { background: #0d1117; border: 2px dashed #30363d; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .sig-time { font-size: 18px; color: #8b949e; margin-bottom: 5px; }
+        .sig-odd { font-size: 36px; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+        .sig-safe { font-size: 14px; color: #e74c3c; font-weight: bold; }
+        .logout-link { color: #8b949e; font-size: 12px; text-decoration: underline; cursor: pointer; margin-top: 15px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>🚀 Lucky Jet VIP</h1>
-    <p class="subtitle">Saisissez votre ID 1win pour accéder aux signaux VIP</p>
+    <h1>🚀 LUCKY JET VIP</h1>
+    <p class="subtitle">Accès exclusif aux signaux VIP</p>
 
-    <div id="login-section">
-        <div class="input-group">
-            <input type="text" id="user-id" placeholder="Entrez votre ID 1win">
-        </div>
+    <!-- ÉCRAN DE CONNEXION -->
+    <div id="login-screen" class="login-box">
+        <input type="text" id="user-id" placeholder="Ex: 363430216">
         <button class="btn" onclick="verifyAccess()">VÉRIFIER MON ACCÈS</button>
-        
-        <div id="msg-box" class="alert"></div>
+        <div id="login-msg" class="alert hidden"></div>
     </div>
 
-    <div id="signal-section" class="signal-box">
-        <span class="session-badge" id="session-label">SESSION EN COURS</span>
-        <div id="signal-content">
-            <p style="color: #8b949e; font-size: 14px;">Appuyez sur le bouton pour obtenir le signal courant</p>
-            <div class="odd-display" id="odd-val">--.--x</div>
-            <p id="time-val" style="font-size: 14px; color: #8b949e; margin-bottom: 15px;"></p>
-            <button class="btn" onclick="getProchainSignal()">PROCHAIN SIGNAL</button>
+    <!-- ÉCRAN DES SIGNAUX -->
+    <div id="signal-screen" class="signals-box hidden">
+        <div id="session-title" class="session-badge">SESSION EN COURS</div>
+        
+        <div class="signal-display">
+            <div id="signal-time" class="sig-time">Heure: --:--</div>
+            <div id="signal-odd" class="sig-odd">x0.00</div>
+            <div id="signal-safe" class="sig-safe">Sécurité: x1.50</div>
+        </div>
+
+        <button id="next-btn" class="btn" onclick="nextSignal()">PROCHAIN SIGNAL</button>
+        <div>
+            <span class="logout-link" onclick="logout()">Changer d'ID 1win</span>
         </div>
     </div>
 </div>
 
 <script>
     const WORKER_URL = "https://zikooneverification.lucsckoba.workers.dev";
+    let activeSignals = [];
+    let currentIndex = 0;
 
-    async function verifyAccess() {
+    // Connexion automatique via stockage local
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedId = localStorage.getItem('luckyjet_vip_id');
+        if (savedId) {
+            document.getElementById('user-id').value = savedId;
+            verifyAccess(true);
+        }
+    });
+
+    async function verifyAccess(isAuto = false) {
         const userId = document.getElementById('user-id').value.trim();
-        const msgBox = document.getElementById('msg-box');
-        msgBox.style.display = 'none';
+        const msgBox = document.getElementById('login-msg');
 
         if (!userId) {
-            showMsg("⚠️ Veuillez saisir votre ID 1win pour continuer.", "error");
+            showMsg("Veuillez entrer votre ID 1win", "error");
             return;
         }
 
         try {
-            const response = await fetch(`${WORKER_URL}?id=${userId}`);
-            const data = await response.json();
-
-            // VÉRIFICATION STRICTE
-            if (!data.registered) {
-                showMsg(`❌ <b>Accès Refusé</b><br>Votre ID n'est pas inscrit sous le code promo <b>ZIKOONE</b>.<br><br>👉 Inscrivez-vous avec le code <b>ZIKOONE</b> et effectuez un dépôt d'au moins 1 000 FCFA pour débloquer l'accès VIP.<br><a class="affiliate-link" href="https://1win.com" target="_blank">Cliquez ici pour vous inscrire sur 1win</a>`, "error");
-            } else if (data.deposit < 1000) {
-                showMsg(`⚠️ <b>Dépôt Insuffisant</b><br>ID vérifié sous le code <b>ZIKOONE</b>, mais votre solde de dépôt est de <b>${data.deposit} FCFA</b>.<br><br>Un dépôt minimum de <b>1 000 FCFA</b> est requis pour activer votre accès aux signaux.`, "warning");
-            } else {
-                showMsg("✅ <b>Compte VIP Vérifié !</b><br>Redirection vers l'espace des signaux...", "success");
-                setTimeout(() => {
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('signal-section').style.display = 'block';
-                    fetchSignals();
-                }, 1200);
-            }
-        } catch (e) {
-            // BLOQUÉ EN CAS D'ERREUR DE CONNEXION
-            showMsg("❌ <b>Erreur de Vérification</b><br>Impossible de vérifier cet ID pour le moment. Veuillez réessayer plus tard ou contacter le support.", "error");
-        }
-    }
-
-    function showMsg(htmlText, type) {
-        const msgBox = document.getElementById('msg-box');
-        msgBox.className = `alert alert-${type}`;
-        msgBox.innerHTML = htmlText;
-        msgBox.style.display = 'block';
-    }
-
-    let currentSignals = [];
-    let activeSessionName = "";
-
-    async function fetchSignals() {
-        try {
-            const res = await fetch(`${WORKER_URL}/get-signals`);
+            const res = await fetch(`${WORKER_URL}/get-signals?id=${userId}`);
             const data = await res.json();
-            currentSignals = data.signals || [];
-            activeSessionName = data.sessionName || "SESSION ACTIVE";
-            document.getElementById('session-label').innerText = activeSessionName;
+
+            if (data.error) {
+                showMsg("❌ " + data.error, "error");
+                localStorage.removeItem('luckyjet_vip_id');
+            } else {
+                localStorage.setItem('luckyjet_vip_id', userId);
+                
+                if (!isAuto) showMsg("✅ Accès VIP Confirmé !", "success");
+                
+                activeSignals = data.signals || [];
+                currentIndex = 0;
+                document.getElementById('session-title').innerText = data.sessionName || "SESSION ACTIVE";
+
+                setTimeout(() => {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('signal-screen').classList.remove('hidden');
+                    updateSignalDisplay();
+                }, isAuto ? 0 : 800);
+            }
         } catch (e) {
-            currentSignals = [];
+            showMsg("❌ Connexion au serveur impossible", "error");
         }
     }
 
-    function getProchainSignal() {
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    // Extraction des minutes indépendamment du fuseau horaire
+    function getMinutesFromTime(timeStr) {
+        if (!timeStr) return 0;
+        const clean = timeStr.replace('h', ':').replace('H', ':');
+        const parts = clean.split(':');
+        if (parts.length === 1) return parseInt(parts[0], 10) || 0;
+        return parseInt(parts[1], 10) || 0;
+    }
 
-        if (currentSignals.length === 0) {
-            document.getElementById('odd-val').innerText = "ATTENTE";
-            document.getElementById('time-val').innerText = "Aucun signal programmé. Patientez l'annonce sur le canal !";
+    function updateSignalDisplay() {
+        const nextBtn = document.getElementById('next-btn');
+
+        if (!activeSignals || activeSignals.length === 0) {
+            document.getElementById('signal-time').innerText = "Information";
+            document.getElementById('signal-odd').innerText = "FINI";
+            document.getElementById('signal-odd').style.color = "#e74c3c";
+            document.getElementById('signal-safe').innerText = "Aucun signal actif disponible";
+            nextBtn.disabled = true;
             return;
         }
 
-        let found = null;
-        for (let sig of currentSignals) {
-            const [h, m] = sig.time.split(':').map(Number);
-            const sigMinutes = h * 60 + m;
-            if (sigMinutes >= currentMinutes) {
-                found = sig;
-                break;
-            }
+        if (currentIndex >= activeSignals.length) {
+            document.getElementById('signal-time').innerText = "Session terminée";
+            document.getElementById('signal-odd').innerText = "FINI";
+            document.getElementById('signal-odd').style.color = "#2ecc71";
+            document.getElementById('signal-safe').innerText = "Rendez-vous à la prochaine session !";
+            nextBtn.disabled = true;
+            return;
         }
 
-        if (found) {
-            const cote = found.multiplier || found.odd || "2.00";
-            const secu = found.safety || found.safe || "1.50";
-            document.getElementById('odd-val').innerText = cote + 'x';
-            document.getElementById('time-val').innerText = "Heure du tour : " + found.time + " | Retrait conseillé : " + secu + "x";
-        } else {
-            document.getElementById('odd-val').innerText = "FINI";
-            document.getElementById('time-val').innerText = "Session terminée ! Rendez-vous sur le canal pour l'annonce de la prochaine session !";
+        const sig = activeSignals[currentIndex];
+        const targetMinute = getMinutesFromTime(sig.time);
+        const currentMinute = new Date().getMinutes();
+
+        // Comparaison basée uniquement sur les minutes de l'heure courante
+        if (targetMinute > currentMinute && (targetMinute - currentMinute) <= 30) {
+            document.getElementById('signal-time').innerText = "Signal prévu minute : " + targetMinute;
+            document.getElementById('signal-odd').innerText = "⏳ PATIENTEZ";
+            document.getElementById('signal-odd').style.color = "#f39c12";
+            document.getElementById('signal-safe').innerText = "Déblocage dans quelques minutes...";
+            nextBtn.disabled = true;
+            return;
         }
+
+        // Affichage du signal validé
+        document.getElementById('signal-time').innerText = "Heure du signal : " + sig.time;
+        
+        let multiplierText = String(sig.multiplier);
+        if (!multiplierText.includes('x')) multiplierText = 'x' + multiplierText;
+        document.getElementById('signal-odd').innerText = multiplierText;
+        document.getElementById('signal-odd').style.color = "#2ecc71";
+        
+        let safeText = String(sig.safety || "1.50");
+        if (!safeText.includes('x')) safeText = 'x' + safeText;
+        document.getElementById('signal-safe').innerText = "Auto-retrait recommandé : " + safeText;
+
+        nextBtn.disabled = false;
+    }
+
+    function nextSignal() {
+        if (activeSignals.length > 0 && currentIndex < activeSignals.length) {
+            currentIndex++;
+            updateSignalDisplay();
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('luckyjet_vip_id');
+        document.getElementById('signal-screen').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('user-id').value = '';
+    }
+
+    function showMsg(text, type) {
+        const msgBox = document.getElementById('login-msg');
+        msgBox.className = "alert " + (type === "error" ? "alert-error" : "alert-success");
+        msgBox.innerText = text;
+        msgBox.classList.remove('hidden');
     }
 </script>
 
