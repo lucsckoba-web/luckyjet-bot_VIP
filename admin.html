@@ -1,0 +1,68 @@
+export default {
+  async fetch(request, env, ctx) {
+    // Gestion des en-têtes CORS pour autoriser l'accès depuis Vercel/GitHub Pages
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    const url = new URL(request.url);
+
+    // 1. ROUTE : Enregistrer les signaux (depuis admin.html)
+    if (url.pathname === "/set-signals" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        // Sauvegarde dans le namespace KV de Cloudflare (ex: env.SIGNALS_KV)
+        if (env.SIGNALS_KV) {
+          await env.SIGNALS_KV.put("current_session", JSON.stringify(body));
+        }
+        return new Response(JSON.stringify({ success: true, message: "Session mise à jour !" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: corsHeaders,
+        });
+      }
+    }
+
+    // 2. ROUTE : Récupérer les signaux (depuis index.html)
+    if (url.pathname === "/get-signals") {
+      let data = null;
+      if (env.SIGNALS_KV) {
+        const raw = await env.SIGNALS_KV.get("current_session");
+        if (raw) data = JSON.parse(raw);
+      }
+      return new Response(JSON.stringify(data || { sessionName: "AUCUNE SESSION", signals: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. ROUTE : Vérification d'ID 1win + Dépôt >= 1000 FCFA
+    const userId = url.searchParams.get("id");
+    if (userId) {
+      // Remplace par ton appel d'API partenaire 1win
+      // Exemple de structure de réponse :
+      const isRegistered = true; // Vérifier si sous le code ZIKOONE
+      const depositAmount = 1500; // Total des dépôts en FCFA
+
+      return new Response(JSON.stringify({
+        registered: isRegistered,
+        deposit: depositAmount
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Requête invalide" }), {
+      status: 400,
+      headers: corsHeaders,
+    });
+  }
+};
