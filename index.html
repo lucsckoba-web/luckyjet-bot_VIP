@@ -21,7 +21,7 @@
         .btn:hover { opacity: 0.9; }
         .btn:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; opacity: 0.5; }
 
-        .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px; text-align: center; }
+        .alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px; text-align: center; white-space: pre-line; }
         .alert-error { background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; }
         .alert-success { background: rgba(46, 204, 113, 0.15); border: 1px solid #2ecc71; color: #2ecc71; }
 
@@ -41,7 +41,7 @@
 
     <!-- ÉCRAN DE CONNEXION -->
     <div id="login-screen" class="login-box">
-        <input type="text" id="user-id" placeholder="Ex: 363430216">
+        <input type="text" id="user-id" placeholder="Ex: 382944109">
         <button class="btn" onclick="verifyAccess()">VÉRIFIER MON ACCÈS</button>
         <div id="login-msg" class="alert hidden"></div>
     </div>
@@ -89,29 +89,40 @@
             const res = await fetch(`${WORKER_URL}/get-signals?id=${userId}`);
             const data = await res.json();
 
-            if (data.error) {
-                showMsg("❌ " + data.error, "error");
+            // CAS 1 : L'ID n'existe pas dans KV (non rattaché au code ZIKOONE)
+            if (!data.registered) {
+                showMsg("❌ ACCÈS REFUSÉ\nCet ID n'est pas rattaché au code promo ZIKOONE.\n\n1. Crée un nouveau compte avec le code ZIKOONE.\n2. Effectue ton premier dépôt.", "error");
                 localStorage.removeItem('luckyjet_vip_id');
-            } else {
-                localStorage.setItem('luckyjet_vip_id', userId);
-                if (!isAuto) showMsg("✅ Accès VIP Confirmé !", "success");
-                
-                activeSignals = data.signals || [];
-                currentIndex = 0;
-                
-                let cleanSessionName = (data.sessionName || "SESSION ACTIVE").replace(/^Ex:\s*/i, '');
-                document.getElementById('session-title').innerText = cleanSessionName;
-
-                setTimeout(() => {
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('signal-screen').classList.remove('hidden');
-                    updateSignalDisplay();
-
-                    if (!autoCheckTimer) {
-                        autoCheckTimer = setInterval(updateButtonStatus, 2000);
-                    }
-                }, isAuto ? 0 : 800);
+                return;
             }
+
+            // CAS 2 : Inscription détectée mais premier dépôt non effectué (deposit == 0)
+            if (data.deposit === 0) {
+                showMsg("⚠️ PREMIER DÉPÔT REQUIS\nTon ID est bien rattaché au code ZIKOONE, mais ton premier dépôt n'a pas encore été détecté.\n\nRecharge ton compte puis réessaie.", "error");
+                localStorage.removeItem('luckyjet_vip_id');
+                return;
+            }
+
+            // CAS 3 : Inscription + Dépôt confirmés (deposit > 0)
+            localStorage.setItem('luckyjet_vip_id', userId);
+            if (!isAuto) showMsg("✅ ACCÈS VÉRIFIÉ AVEC SUCCÈS !", "success");
+            
+            activeSignals = data.signals || [];
+            currentIndex = 0;
+            
+            let cleanSessionName = (data.sessionName || "SESSION ACTIVE").replace(/^Ex:\s*/i, '');
+            document.getElementById('session-title').innerText = cleanSessionName;
+
+            setTimeout(() => {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('signal-screen').classList.remove('hidden');
+                updateSignalDisplay();
+
+                if (!autoCheckTimer) {
+                    autoCheckTimer = setInterval(updateButtonStatus, 2000);
+                }
+            }, isAuto ? 0 : 800);
+
         } catch (e) {
             showMsg("❌ Connexion au serveur impossible", "error");
         }
@@ -155,7 +166,6 @@
             return;
         }
 
-        // Le signal à l'index courant S'AFFICHE TOUJOURS
         const currentSig = activeSignals[currentIndex];
         const displayTime = String(currentSig.time).replace(/^Ex:\s*/i, '');
 
@@ -181,7 +191,6 @@
         }
 
         const currentSig = activeSignals[currentIndex];
-        // Bloque le bouton tant que la minute du signal courant n'est pas atteinte
         const canGoNext = hasCurrentSignalPassed(currentSig);
         nextBtn.disabled = !canGoNext;
     }
